@@ -18,6 +18,8 @@ public class Main {
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
           clientSocket = serverSocket.accept();
+          CommandHandler commandHandler = new CommandHandler();
+          commandHandler.commandResponse(clientSocket);
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
         } finally {
