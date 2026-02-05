@@ -3,8 +3,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Main {
+  static CommandHandler commandHandler = new CommandHandler();
+
   public static void main(String[] args){
-    CommandHandler commandHandler = new CommandHandler();
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     System.out.println("Logs from your program will appear here!");
 
@@ -18,9 +19,12 @@ public class Main {
           // ensures that we don't run into 'Address already in use' errors
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
-
-          clientSocket = serverSocket.accept();
-          commandHandler.commandResponse(clientSocket);
+          while(true){
+            clientSocket = serverSocket.accept();
+            ClientHandler clientHandler = new ClientHandler(clientSocket);
+            Thread worker = new Thread(clientHandler);
+            worker.start();
+          }
 
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
@@ -33,5 +37,17 @@ public class Main {
             System.out.println("IOException: " + e.getMessage());
           }
         }
+  }
+
+  static class ClientHandler implements Runnable {
+      Socket clientSocket;
+      ClientHandler(Socket clientSocket){
+        this.clientSocket = clientSocket;
+      }
+
+      @Override
+      public void run(){
+        commandHandler.commandResponse(clientSocket);
+      }
   }
 }
