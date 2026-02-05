@@ -4,6 +4,7 @@ import java.net.Socket;
 
 public class Main {
   public static void main(String[] args){
+    CommandHandler commandHandler = new CommandHandler();
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     System.out.println("Logs from your program will appear here!");
 
@@ -17,9 +18,10 @@ public class Main {
           // ensures that we don't run into 'Address already in use' errors
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
+
           clientSocket = serverSocket.accept();
-          CommandHandler commandHandler = new CommandHandler();
           commandHandler.commandResponse(clientSocket);
+
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
         } finally {
