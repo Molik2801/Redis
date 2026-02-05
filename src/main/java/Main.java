@@ -1,6 +1,9 @@
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 public class Main {
   static CommandHandler commandHandler = new CommandHandler();
@@ -47,7 +50,20 @@ public class Main {
 
       @Override
       public void run(){
-        commandHandler.commandResponse(clientSocket);
+          try {
+              InputStream inputStream = clientSocket.getInputStream();
+              OutputStream outputStream = clientSocket.getOutputStream();
+              while(true){
+                  byte[] input = new byte[1024];
+                  int byteCount = inputStream.read(input);
+                  String inputString = new String(input).trim();
+                  Parser parser = new Parser();
+                  List<String> inputList = parser.parse(inputString);
+                  CommandHandler.commandResponse(inputList , outputStream);
+              }
+          } catch(IOException e){
+              throw new RuntimeException(e);
+          }
       }
   }
 }

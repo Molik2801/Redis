@@ -1,20 +1,14 @@
 import java.io.*;
-import java.net.Socket;
+import java.util.List;
 
 public class CommandHandler {
 
-    void commandResponse(Socket clientSocket){
-        try {
-            InputStream inputStream = clientSocket.getInputStream();
-            OutputStream outputStream = clientSocket.getOutputStream();
-            while(true){
-                byte[] input = new byte[1024];
-                int byteCount = inputStream.read(input);
-                String inputString = new String(input).trim();
-                outputStream.write("+PONG\r\n".getBytes());
-            }
-        } catch(IOException e){
-            throw new RuntimeException(e);
+    static void commandResponse(List<String> input , OutputStream outputStream) throws IOException {
+        if(input.get(0).equals("PING")){
+            outputStream.write("+PONG\r\n".getBytes());
+        }
+        else if(input.get(0).equalsIgnoreCase("ECHO")){
+            outputStream.write(input.get(1).getBytes());
         }
     }
 }
