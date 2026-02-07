@@ -1,19 +1,34 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Parser {
     List<String> parse(String input){
-        String[] content = input.split("\r\n");
-//        System.out.println(Arrays.toString(content));
-        List<String> args = new ArrayList<>();
-        args.add(content[2]);
-        StringBuilder rem = new StringBuilder();
-        for(int i = 3 ; i < content.length ; i++){
-            rem.append(content[i]).append("\r\n");
+        if(input == null || input.isEmpty()){
+            return new ArrayList<>();
         }
-        args.add(rem.toString());
+        List<String> args = new ArrayList<>();
+        System.out.println("Hlo");
+        int ind = 0;
+        int totLen = 1;
+        while(totLen > 0){
+            if(input.charAt(ind) == '*'){
+                int endPt = input.indexOf("\r\n" , ind);
+                totLen = Integer.parseInt(input.substring(ind+1 , endPt));
+                ind += endPt + 2;
+            }
+            else if(input.charAt(ind) == '$'){
+                int endPt = input.indexOf("\r\n" , ind);
+                int comSize = Integer.parseInt(input.substring(ind+1 , endPt));
+                args.add(input.substring(endPt + 2 , endPt + 2 + comSize));
+                ind = endPt + comSize + 4;
+                totLen--;
+            }
+        }
         System.out.println(args);
         return args;
     }
 }
+
+// *3\r\n$3\r\nSET\r\n$1\r\nx\r\n$1\r\n1\r\n
