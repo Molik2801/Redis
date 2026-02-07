@@ -1,14 +1,15 @@
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandHandler {
-    static ConcurrentHashMap<String , String> storage = new ConcurrentHashMap<>();
+    static ConcurrentHashMap<String , RedisData> storage = new ConcurrentHashMap<>();
 
     static void commandResponse(List<String> input , OutputStream outputStream) throws IOException {
         if(input == null || input.isEmpty()){
-            return; 
+            return;
         }
         if(input.get(0).equals("PING")){
             outputStream.write("+PONG\r\n".getBytes());
@@ -18,12 +19,29 @@ public class CommandHandler {
             outputStream.write(("$" + res.length() + "\r\n" + res + "\r\n").getBytes());
         }
         else if(input.get(0).equals("SET")){
-            storage.put(input.get(1) , input.get(2));
+            RedisData data = new RedisData();
+            data.value = input.get(2);
+            if(input.size() >= 5){
+                if(Objects.equals(input.get(3), "EX")){
+                    data.expiryTime = System.currentTimeMillis() + Integer.parseInt(input.get(4))* 100L;
+                }
+                else if(Objects.equals(input.get(3), "PX")){
+                    data.expiryTime = System.currentTimeMillis() + Integer.parseInt(input.get(4));
+                }
+            }
+            storage.put(input.get(1) , data);
             outputStream.write("+OK\r\n".getBytes());
         }
         else if(input.get(0).equals("GET")){
-            String res = storage.get(input.get(1));
-            outputStream.write(("$" + res.length() + "\r\n" + res + "\r\n").getBytes());
+            RedisData res = storage.get(input.get(1));
+            long curTime = System.currentTimeMillis();
+            if(curTime > res.expiryTime){
+                outputStream.write("$-1\r\n".getBytes());
+                storage.remove(input.get(1));
+            }
+            else {
+                outputStream.write(("$" + res.value.length() + "\r\n" + res.value + "\r\n").getBytes());
+            }
         }
     }
 }
