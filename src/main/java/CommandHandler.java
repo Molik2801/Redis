@@ -114,5 +114,15 @@ public class CommandHandler {
             }
             outputStream.write((":" + size + "\r\n").getBytes());
         }
+        else if(input.get(0).equals("LPOP")){
+            if(GlobalMaps.list.containsKey(input.get(1))){
+                if(GlobalMaps.list.get(input.get(1)).size() > 1){
+                    String element = GlobalMaps.list.get(input.get(1)).removeFirst();
+                    outputStream.write(("$" + element.length() + "\r\n" + element + "\r\n").getBytes());
+                }
+                else outputStream.write(("$-1\r\n").getBytes());
+            }
+            else outputStream.write(("$-1\r\n").getBytes());
+        }
     }
 }
