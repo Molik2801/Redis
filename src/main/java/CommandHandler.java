@@ -44,18 +44,19 @@ public class CommandHandler {
             }
         }
         else if(input.get(0).equals("RPUSH")){
-            int size = 1;
             if(GlobalMaps.list.containsKey(input.get(1))){
-                System.out.println(size + " Exist");
-                GlobalMaps.list.get(input.get(1)).add(input.get(2));
-                size = GlobalMaps.list.get(input.get(1)).size();
+                for(int i = 2 ; i < input.size() ; i++){
+                    GlobalMaps.list.get(input.get(1)).add(input.get(2));
+                }
             }
             else {
                 ArrayList curList = new ArrayList();
-                curList.add(input.get(2));
-                System.out.println(size + " Empty");
+                for(int i = 2 ; i < input.size() ; i++){
+                    curList.add(input.get(2));
+                }
                 GlobalMaps.list.put(input.get(1) , curList);
             }
+            int size = GlobalMaps.list.get(input.get(1)).size();
             outputStream.write((":" + size + "\r\n").getBytes());
         }
     }
