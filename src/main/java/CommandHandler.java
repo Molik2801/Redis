@@ -70,6 +70,12 @@ public class CommandHandler {
             StringBuilder respBulk = new StringBuilder();
 
             if(GlobalMaps.list.containsKey(listName)){
+                if(l < 0){
+                    l = Math.max(0 , GlobalMaps.list.get(listName).size() + l);
+                }
+                if(r < 0){
+                    r = Math.max(0 , GlobalMaps.list.get(listName).size() + r);
+                }
                 int size = Math.min(r , GlobalMaps.list.get(listName).size() - 1) - Math.max(0 , l) + 1;
                 respBulk.append("*" + size + "\r\n");
                 System.out.println(size);
