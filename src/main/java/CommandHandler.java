@@ -1,11 +1,11 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandHandler {
-    static ConcurrentHashMap<String , RedisData> storage = new ConcurrentHashMap<>();
 
     static void commandResponse(List<String> input , OutputStream outputStream) throws IOException {
         if(input == null || input.isEmpty()){
@@ -29,19 +29,31 @@ public class CommandHandler {
                     data.expiryTime = System.currentTimeMillis() + Integer.parseInt(input.get(4));
                 }
             }
-            storage.put(input.get(1) , data);
+            GlobalMaps.data.put(input.get(1) , data);
             outputStream.write("+OK\r\n".getBytes());
         }
         else if(input.get(0).equals("GET")){
-            RedisData res = storage.get(input.get(1));
+            RedisData res = GlobalMaps.data.get(input.get(1));
             long curTime = System.currentTimeMillis();
             if(curTime > res.expiryTime){
                 outputStream.write("$-1\r\n".getBytes());
-                storage.remove(input.get(1));
+                GlobalMaps.data.remove(input.get(1));
             }
             else {
                 outputStream.write(("$" + res.value.length() + "\r\n" + res.value + "\r\n").getBytes());
             }
+        }
+        else if(input.get(0).equals("RPUSH")){
+            int size = 1;
+            if(GlobalMaps.list.containsKey(input.get(1))){
+                size = GlobalMaps.list.get(input.get(1)).size();
+                GlobalMaps.list.get(input.get(1)).add(input.get(2));
+            }
+            else {
+                ArrayList list = new ArrayList();
+                GlobalMaps.list.put(input.get(0) , list);
+            }
+            outputStream.write((":" + size + "\r\n").getBytes());
         }
     }
 }
