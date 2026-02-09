@@ -107,5 +107,12 @@ public class CommandHandler {
             int size = GlobalMaps.list.get(input.get(1)).size();
             outputStream.write((":" + size + "\r\n").getBytes());
         }
+        else if(input.get(0).equals("LLEN")){
+            int size = 0;
+            if(GlobalMaps.list.containsKey(input.get(1))){
+                size = GlobalMaps.list.get(input.get(1)).size();
+            }
+            outputStream.write((":" + size + "\r\n").getBytes());
+        }
     }
 }
