@@ -9,7 +9,7 @@ public class Parser {
             return new ArrayList<>();
         }
         List<String> args = new ArrayList<>();
-        System.out.println("Hlo");
+//        System.out.println("Hlo");
         int ind = 0;
         int totLen = 1;
         while(totLen > 0){

@@ -46,12 +46,15 @@ public class CommandHandler {
         else if(input.get(0).equals("RPUSH")){
             int size = 1;
             if(GlobalMaps.list.containsKey(input.get(1))){
-                size = GlobalMaps.list.get(input.get(1)).size();
+                System.out.println(size + " Exist");
                 GlobalMaps.list.get(input.get(1)).add(input.get(2));
+                size = GlobalMaps.list.get(input.get(1)).size();
             }
             else {
-                ArrayList list = new ArrayList();
-                GlobalMaps.list.put(input.get(0) , list);
+                ArrayList curList = new ArrayList();
+                curList.add(input.get(2));
+                System.out.println(size + " Empty");
+                GlobalMaps.list.put(input.get(1) , curList);
             }
             outputStream.write((":" + size + "\r\n").getBytes());
         }
