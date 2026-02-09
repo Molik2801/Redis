@@ -1,4 +1,6 @@
 import java.io.*;
+import java.lang.reflect.Array;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,18 +48,42 @@ public class CommandHandler {
         else if(input.get(0).equals("RPUSH")){
             if(GlobalMaps.list.containsKey(input.get(1))){
                 for(int i = 2 ; i < input.size() ; i++){
-                    GlobalMaps.list.get(input.get(1)).add(input.get(2));
+//                    System.out.println(i + " " + input.get(i) + " hi");
+                    GlobalMaps.list.get(input.get(1)).add(input.get(i));
                 }
             }
             else {
                 ArrayList curList = new ArrayList();
                 for(int i = 2 ; i < input.size() ; i++){
-                    curList.add(input.get(2));
+//                    System.out.println(i + " " + input.get(i) + " hi1");
+                    curList.add(input.get(i));
                 }
                 GlobalMaps.list.put(input.get(1) , curList);
             }
             int size = GlobalMaps.list.get(input.get(1)).size();
             outputStream.write((":" + size + "\r\n").getBytes());
+        }
+        else if(input.get(0).equals("LRANGE")){
+            int l = Integer.parseInt(input.get(2));
+            int r = Integer.parseInt(input.get(3));
+            String listName = input.get(1);
+            StringBuilder respBulk = new StringBuilder();
+
+            if(GlobalMaps.list.containsKey(listName)){
+                int size = Math.min(r , GlobalMaps.list.get(listName).size() - 1) - Math.max(0 , l) + 1;
+                respBulk.append("*" + size + "\r\n");
+                System.out.println(size);
+                for(int i = Math.max(0 , l) ; i <= Math.min(r , GlobalMaps.list.get(listName).size() - 1) ; i++){
+                    String element = GlobalMaps.list.get(listName).get(i).toString();
+                    System.out.println(i + " " + element);
+                    respBulk.append("$").append(element.length()).append("\r\n").append(element).append("\r\n");
+                }
+            }
+            else{
+                respBulk.append("*0\r\n");
+            }
+            outputStream.write(respBulk.toString().getBytes());
+
         }
     }
 }
