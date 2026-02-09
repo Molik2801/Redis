@@ -1,10 +1,7 @@
 import java.io.*;
 import java.lang.reflect.Array;
 import java.sql.SQLOutput;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandHandler {
@@ -53,10 +50,10 @@ public class CommandHandler {
                 }
             }
             else {
-                ArrayList curList = new ArrayList();
+                ArrayDeque<String> curList = new ArrayDeque<>();
                 for(int i = 2 ; i < input.size() ; i++){
 //                    System.out.println(i + " " + input.get(i) + " hi1");
-                    curList.add(input.get(i));
+                    curList.addLast(input.get(i));
                 }
                 GlobalMaps.list.put(input.get(1) , curList);
             }
@@ -77,10 +74,14 @@ public class CommandHandler {
                     r = Math.max(0 , GlobalMaps.list.get(listName).size() + r);
                 }
                 int size = Math.min(r , GlobalMaps.list.get(listName).size() - 1) - Math.max(0 , l) + 1;
-                respBulk.append("*" + size + "\r\n");
+                respBulk.append("*").append(size).append("\r\n");
                 System.out.println(size);
-                for(int i = Math.max(0 , l) ; i <= Math.min(r , GlobalMaps.list.get(listName).size() - 1) ; i++){
-                    String element = GlobalMaps.list.get(listName).get(i).toString();
+                int lr = Math.max(0 , l);
+                int rr = Math.min(r , GlobalMaps.list.get(listName).size() - 1);
+                List<String> range = GlobalMaps.list.get(listName).stream().skip(lr).limit(rr - lr + 1).toList();
+                System.out.println(range);
+                for(int i = 0 ; i < range.size() ; i++){
+                    String element = range.get(i);
                     System.out.println(i + " " + element);
                     respBulk.append("$").append(element.length()).append("\r\n").append(element).append("\r\n");
                 }
@@ -89,7 +90,22 @@ public class CommandHandler {
                 respBulk.append("*0\r\n");
             }
             outputStream.write(respBulk.toString().getBytes());
-
+        }
+        else if(input.get(0).equals("LPUSH")){
+            if(GlobalMaps.list.containsKey(input.get(1))){
+                for(int i = 2 ; i < input.size() ; i++){
+                    GlobalMaps.list.get(input.get(1)).addFirst(input.get(i));
+                }
+            }
+            else {
+                ArrayDeque<String> curList = new ArrayDeque<>();
+                for(int i = 2 ; i < input.size() ; i++){
+                    curList.addFirst(input.get(i));
+                }
+                GlobalMaps.list.put(input.get(1) , curList);
+            }
+            int size = GlobalMaps.list.get(input.get(1)).size();
+            outputStream.write((":" + size + "\r\n").getBytes());
         }
     }
 }
