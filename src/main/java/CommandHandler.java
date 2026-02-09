@@ -116,11 +116,29 @@ public class CommandHandler {
         }
         else if(input.get(0).equals("LPOP")){
             if(GlobalMaps.list.containsKey(input.get(1))){
-                if(GlobalMaps.list.get(input.get(1)).size() > 1){
-                    String element = GlobalMaps.list.get(input.get(1)).removeFirst();
-                    outputStream.write(("$" + element.length() + "\r\n" + element + "\r\n").getBytes());
+                if(GlobalMaps.list.get(input.get(1)).isEmpty()) outputStream.write(("$-1\r\n").getBytes());
+                else{
+                    StringBuilder resp = new StringBuilder();
+                    int totalToRemove = 1;
+                    if(input.size() > 2) {
+                        totalToRemove = Integer.parseInt(input.get(2));
+                        totalToRemove = Math.min(totalToRemove , GlobalMaps.list.get(input.get(1)).size());
+                        resp.append("*" + totalToRemove + "\r\n");
+                        for(int i = 0 ; i < totalToRemove ; i++){
+                            if(GlobalMaps.list.get(input.get(1)).isEmpty())break;
+                            String element = GlobalMaps.list.get(input.get(1)).removeFirst();
+                            resp.append("$" + element.length() + "\r\n" + element + "\r\n");
+                        }
+                        outputStream.write(resp.toString().getBytes());
+                    }
+                    else{
+                        if(GlobalMaps.list.get(input.get(1)).isEmpty())outputStream.write(("$-1\r\n").getBytes());
+                        else{
+                            String element = GlobalMaps.list.get(input.get(1)).removeFirst();
+                            outputStream.write(("$" + element.length() + "\r\n" + element + "\r\n").getBytes());
+                        }
+                    }
                 }
-                else outputStream.write(("$-1\r\n").getBytes());
             }
             else outputStream.write(("$-1\r\n").getBytes());
         }
