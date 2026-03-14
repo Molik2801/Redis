@@ -2,7 +2,9 @@ import java.io.*;
 import java.lang.reflect.Array;
 import java.sql.SQLOutput;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CommandHandler {
 
@@ -43,22 +45,35 @@ public class CommandHandler {
             }
         }
         else if(input.get(0).equals("RPUSH")){
-            if(GlobalMaps.list.containsKey(input.get(1))){
+
+                String key = input.get(1);
+
+                int currentSize = GlobalMaps.list.containsKey(key) ? GlobalMaps.list.get(key).size() : 0;
+                int pushedCount = input.size() - 2; 
+                int expectedRedisSize = currentSize + pushedCount;
+                outputStream.write((":" + expectedRedisSize + "\r\n").getBytes());
+                
+                GlobalMaps.waiters.putIfAbsent(key , new ConcurrentLinkedQueue<>());
+                ConcurrentLinkedQueue<CompletableFuture<String>> queue = GlobalMaps.waiters.get(key);
+
                 for(int i = 2 ; i < input.size() ; i++){
-//                    System.out.println(i + " " + input.get(i) + " hi");
-                    GlobalMaps.list.get(input.get(1)).add(input.get(i));
+
+                    String element = input.get(i);
+                    
+                    synchronized(queue){
+                        if(queue != null && !queue.isEmpty()){
+                            CompletableFuture<String> future = queue.poll();
+                            if(future != null){
+                                future.complete(element);
+                                continue;
+                            }
+                        }
+                        else{
+                            GlobalMaps.list.putIfAbsent(key , new ArrayDeque<>());
+                            GlobalMaps.list.get(key).addLast(element);
+                        }
+                    }
                 }
-            }
-            else {
-                ArrayDeque<String> curList = new ArrayDeque<>();
-                for(int i = 2 ; i < input.size() ; i++){
-//                    System.out.println(i + " " + input.get(i) + " hi1");
-                    curList.addLast(input.get(i));
-                }
-                GlobalMaps.list.put(input.get(1) , curList);
-            }
-            int size = GlobalMaps.list.get(input.get(1)).size();
-            outputStream.write((":" + size + "\r\n").getBytes());
         }
         else if(input.get(0).equals("LRANGE")){
             int l = Integer.parseInt(input.get(2));
@@ -92,20 +107,34 @@ public class CommandHandler {
             outputStream.write(respBulk.toString().getBytes());
         }
         else if(input.get(0).equals("LPUSH")){
-            if(GlobalMaps.list.containsKey(input.get(1))){
+            String key = input.get(1);
+
+            int currentSize = GlobalMaps.list.containsKey(key) ? GlobalMaps.list.get(key).size() : 0;
+            int pushedCount = input.size() - 2; 
+            int expectedRedisSize = currentSize + pushedCount;
+            outputStream.write((":" + expectedRedisSize + "\r\n").getBytes());
+
+             GlobalMaps.waiters.putIfAbsent(key , new ConcurrentLinkedQueue<>());
+                ConcurrentLinkedQueue<CompletableFuture<String>> queue = GlobalMaps.waiters.get(key);
+
                 for(int i = 2 ; i < input.size() ; i++){
-                    GlobalMaps.list.get(input.get(1)).addFirst(input.get(i));
+
+                    String element = input.get(i);
+                    
+                    synchronized(queue){
+                        if(queue != null && !queue.isEmpty()){
+                            CompletableFuture<String> future = queue.poll();
+                            if(future != null){
+                                future.complete(element);
+                                continue;
+                            }
+                        }
+                        else{
+                            GlobalMaps.list.putIfAbsent(key , new ArrayDeque<>());
+                            GlobalMaps.list.get(key).addFirst(element);
+                        }
+                    }
                 }
-            }
-            else {
-                ArrayDeque<String> curList = new ArrayDeque<>();
-                for(int i = 2 ; i < input.size() ; i++){
-                    curList.addFirst(input.get(i));
-                }
-                GlobalMaps.list.put(input.get(1) , curList);
-            }
-            int size = GlobalMaps.list.get(input.get(1)).size();
-            outputStream.write((":" + size + "\r\n").getBytes());
         }
         else if(input.get(0).equals("LLEN")){
             int size = 0;
@@ -114,33 +143,80 @@ public class CommandHandler {
             }
             outputStream.write((":" + size + "\r\n").getBytes());
         }
-        else if(input.get(0).equals("LPOP")){
-            if(GlobalMaps.list.containsKey(input.get(1))){
-                if(GlobalMaps.list.get(input.get(1)).isEmpty()) outputStream.write(("$-1\r\n").getBytes());
-                else{
-                    StringBuilder resp = new StringBuilder();
-                    int totalToRemove = 1;
-                    if(input.size() > 2) {
-                        totalToRemove = Integer.parseInt(input.get(2));
-                        totalToRemove = Math.min(totalToRemove , GlobalMaps.list.get(input.get(1)).size());
-                        resp.append("*" + totalToRemove + "\r\n");
-                        for(int i = 0 ; i < totalToRemove ; i++){
-                            if(GlobalMaps.list.get(input.get(1)).isEmpty())break;
-                            String element = GlobalMaps.list.get(input.get(1)).removeFirst();
-                            resp.append("$" + element.length() + "\r\n" + element + "\r\n");
-                        }
-                        outputStream.write(resp.toString().getBytes());
-                    }
-                    else{
-                        if(GlobalMaps.list.get(input.get(1)).isEmpty())outputStream.write(("$-1\r\n").getBytes());
-                        else{
-                            String element = GlobalMaps.list.get(input.get(1)).removeFirst();
-                            outputStream.write(("$" + element.length() + "\r\n" + element + "\r\n").getBytes());
-                        }
-                    }
+        else if (input.get(0).equals("LPOP")) {
+            String key = input.get(1);
+            Deque<String> deque = GlobalMaps.list.get(key);
+
+            if (deque == null || deque.isEmpty()) {
+                outputStream.write("$-1\r\n".getBytes());
+                return;
+            }
+
+            int totalToRemove = 1;
+            boolean hasCount = input.size() > 2;
+
+            if (hasCount) {
+                try {
+                    totalToRemove = Math.min(Integer.parseInt(input.get(2)), deque.size());
+                } catch (NumberFormatException e) {
+                    outputStream.write("-ERR value is not an integer\r\n".getBytes());
+                    return;
                 }
             }
-            else outputStream.write(("$-1\r\n").getBytes());
+
+            StringBuilder resp = new StringBuilder();
+            if (hasCount) {
+                resp.append("*").append(totalToRemove).append("\r\n");
+            }
+            for (int i = 0; i < totalToRemove; i++) {
+                String element = deque.removeFirst();
+                resp.append("$").append(element.length()).append("\r\n").append(element).append("\r\n");
+            }
+            outputStream.write(resp.toString().getBytes());
+        }
+        else if(input.get(0).equals("BLPOP")){
+            String key = input.get(1);
+
+            // Ensure a queue exists so we have an object to lock onto
+            GlobalMaps.waiters.putIfAbsent(key, new ConcurrentLinkedQueue<>());
+            ConcurrentLinkedQueue<CompletableFuture<String>> queue = GlobalMaps.waiters.get(key);
+            
+            CompletableFuture<String> future = new CompletableFuture<>();
+            boolean immediatePop = false;
+            String poppedElement = null;
+
+            // SYNCHRONIZE to prevent RPUSH from happening while we check
+            synchronized (queue) {
+                Deque<String> deque = GlobalMaps.list.get(key);
+                
+                if (deque != null && !deque.isEmpty()) {
+                    // Data is already here! Grab it.
+                    poppedElement = deque.removeFirst();
+                    immediatePop = true;
+                } else {
+                    // No data. Safely add ourselves to the wait queue while locked.
+                    queue.add(future);
+                }
+            }
+
+            try {
+                String element;
+                if (immediatePop) {
+                    element = poppedElement;
+                } else {
+                    // IMPORTANT: We call future.get() OUTSIDE the synchronized block!
+                    // If we waited inside, RPUSH would never be able to get the lock to wake us up.
+                    element = future.get(); 
+                }
+
+                String response = "*2\r\n$" + key.length() + "\r\n" + key + "\r\n$" + element.length() + "\r\n" + element + "\r\n";
+                outputStream.write(response.getBytes());
+                outputStream.flush(); // Always good practice to flush the stream!
+
+            } catch (Exception e) {
+                outputStream.write("-ERR BLPOP interrupted\r\n".getBytes());
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }
