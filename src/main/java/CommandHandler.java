@@ -61,15 +61,24 @@ public class CommandHandler {
                     String element = input.get(i);
                     
                     synchronized(queue){
-                        if(queue != null && !queue.isEmpty()){
+
+                        boolean handedOff = false;
+                    
+                        // Keep pulling from the queue until we find a living, waiting client
+                        while (!queue.isEmpty()) {
                             CompletableFuture<String> future = queue.poll();
-                            if(future != null){
-                                future.complete(element);
-                                continue;
+                            
+                            // Try to hand it off. If complete() returns true, it worked!
+                            if (future.complete(element)) {
+                                handedOff = true;
+                                break; 
                             }
+                            // If it returns false, the future was dead (timed out). The loop continues.
                         }
-                        else{
-                            GlobalMaps.list.putIfAbsent(key , new ArrayDeque<>());
+                        
+                        // If no one was waiting (or all waiters had timed out), add it to the list
+                        if (!handedOff) {
+                            GlobalMaps.list.putIfAbsent(key, new ArrayDeque<>());
                             GlobalMaps.list.get(key).addLast(element);
                         }
                     }
@@ -122,15 +131,23 @@ public class CommandHandler {
                     String element = input.get(i);
                     
                     synchronized(queue){
-                        if(queue != null && !queue.isEmpty()){
+                        boolean handedOff = false;
+                    
+                        // Keep pulling from the queue until we find a living, waiting client
+                        while (!queue.isEmpty()) {
                             CompletableFuture<String> future = queue.poll();
-                            if(future != null){
-                                future.complete(element);
-                                continue;
+                            
+                            // Try to hand it off. If complete() returns true, it worked!
+                            if (future.complete(element)) {
+                                handedOff = true;
+                                break; 
                             }
+                            // If it returns false, the future was dead (timed out). The loop continues.
                         }
-                        else{
-                            GlobalMaps.list.putIfAbsent(key , new ArrayDeque<>());
+                        
+                        // If no one was waiting (or all waiters had timed out), add it to the list
+                        if (!handedOff) {
+                            GlobalMaps.list.putIfAbsent(key, new ArrayDeque<>());
                             GlobalMaps.list.get(key).addFirst(element);
                         }
                     }
@@ -176,6 +193,9 @@ public class CommandHandler {
         }
         else if(input.get(0).equals("BLPOP")){
             String key = input.get(1);
+            
+            double timeoutSeconds = Double.parseDouble(input.get(2));
+            long timeoutMillis = (long) (timeoutSeconds * 1000);
 
             // Ensure a queue exists so we have an object to lock onto
             GlobalMaps.waiters.putIfAbsent(key, new ConcurrentLinkedQueue<>());
@@ -206,13 +226,26 @@ public class CommandHandler {
                 } else {
                     // IMPORTANT: We call future.get() OUTSIDE the synchronized block!
                     // If we waited inside, RPUSH would never be able to get the lock to wake us up.
-                    element = future.get(); 
+                    if(timeoutMillis > 0){
+                        element = future.get(timeoutMillis, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    }
+                    else{
+                        element = future.get();
+                    }
                 }
 
                 String response = "*2\r\n$" + key.length() + "\r\n" + key + "\r\n$" + element.length() + "\r\n" + element + "\r\n";
                 outputStream.write(response.getBytes());
                 outputStream.flush(); // Always good practice to flush the stream!
 
+            } 
+            catch (java.util.concurrent.TimeoutException e) {
+                // Timeout occurred, we need to remove our future from the queue to prevent memory leaks
+                future.cancel(false);
+                synchronized (queue) {
+                    queue.remove(future);
+                }
+                outputStream.write("*-1\r\n".getBytes());
             } catch (Exception e) {
                 outputStream.write("-ERR BLPOP interrupted\r\n".getBytes());
                 Thread.currentThread().interrupt();
