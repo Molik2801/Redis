@@ -11,7 +11,7 @@ public class LPopCommand implements Command{
     @Override
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
         String key = input.get(1);
-        Deque<String> deque = RedisStore.list.get(key);
+        Deque<String> deque = store.list.get(key);
 
         if (deque == null || deque.isEmpty()) {
             out.write("$-1\r\n".getBytes());

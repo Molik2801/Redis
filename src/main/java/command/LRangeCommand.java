@@ -14,19 +14,19 @@ public class LRangeCommand implements Command{
         String listName = input.get(1);
         StringBuilder respBulk = new StringBuilder();
 
-        if(RedisStore.list.containsKey(listName)){
+        if(store.list.containsKey(listName)){
             if(l < 0){
-                l = Math.max(0 , RedisStore.list.get(listName).size() + l);
+                l = Math.max(0 , store.list.get(listName).size() + l);
             }
             if(r < 0){
-                r = Math.max(0 , RedisStore.list.get(listName).size() + r);
+                r = Math.max(0 , store.list.get(listName).size() + r);
             }
-            int size = Math.min(r , RedisStore.list.get(listName).size() - 1) - Math.max(0 , l) + 1;
+            int size = Math.min(r , store.list.get(listName).size() - 1) - Math.max(0 , l) + 1;
             respBulk.append("*").append(size).append("\r\n");
             System.out.println(size);
             int lr = Math.max(0 , l);
-            int rr = Math.min(r , RedisStore.list.get(listName).size() - 1);
-            List<String> range = RedisStore.list.get(listName).stream().skip(lr).limit(rr - lr + 1).toList();
+            int rr = Math.min(r , store.list.get(listName).size() - 1);
+            List<String> range = store.list.get(listName).stream().skip(lr).limit(rr - lr + 1).toList();
             System.out.println(range);
             for(int i = 0 ; i < range.size() ; i++){
                 String element = range.get(i);

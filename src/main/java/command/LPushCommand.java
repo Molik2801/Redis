@@ -13,12 +13,12 @@ public class LPushCommand implements Command {
     @Override
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
         String key = input.get(1);
-        int currentSize = RedisStore.list.containsKey(key) ? RedisStore.list.get(key).size() : 0;
+        int currentSize = store.list.containsKey(key) ? store.list.get(key).size() : 0;
         int pushedCount = input.size() - 2; 
         int expectedRedisSize = currentSize + pushedCount;
         out.write((":" + expectedRedisSize + "\r\n").getBytes());
-            RedisStore.waiters.putIfAbsent(key , new ConcurrentLinkedQueue<>());
-            ConcurrentLinkedQueue<CompletableFuture<String>> queue = RedisStore.waiters.get(key);
+            store.waiters.putIfAbsent(key , new ConcurrentLinkedQueue<>());
+            ConcurrentLinkedQueue<CompletableFuture<String>> queue = store.waiters.get(key);
 
             for(int i = 2 ; i < input.size() ; i++){
 
@@ -41,8 +41,8 @@ public class LPushCommand implements Command {
                     
                     // If no one was waiting (or all waiters had timed out), add it to the list
                     if (!handedOff) {
-                        RedisStore.list.putIfAbsent(key, new ArrayDeque<>());
-                        RedisStore.list.get(key).addFirst(element);
+                        store.list.putIfAbsent(key, new ArrayDeque<>());
+                        store.list.get(key).addFirst(element);
                     }
                 }
             }

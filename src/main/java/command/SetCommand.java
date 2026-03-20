@@ -21,7 +21,7 @@ public class SetCommand implements Command {
                 data.expiryTime = System.currentTimeMillis() + Integer.parseInt(input.get(4));
             }
         }
-        RedisStore.data.put(input.get(1) , data);
+        store.data.put(input.get(1) , data);
         out.write("+OK\r\n".getBytes());
         out.flush();
     }
