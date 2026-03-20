@@ -20,6 +20,7 @@ public class CommandRegistry {
         commands.put("LLEN", new LLenCommand());
         commands.put("TYPE", new TypeCommand());
         commands.put("XADD", new XaddCommand());
+        commands.put("XRANGE" , new XRangeCommand());
     }
 
     public Command getCommand(String name) {

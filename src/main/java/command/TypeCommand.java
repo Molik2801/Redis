@@ -11,7 +11,7 @@ public class TypeCommand implements Command {
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
        String key = input.get(1);
        String type = "none";
-       if(store.stream.containsKey(key)){
+       if(store.streams.containsKey(key)){
             type = "stream";
        }
        else if(store.data.containsKey(key)){
