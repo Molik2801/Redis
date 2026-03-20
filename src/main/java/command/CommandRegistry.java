@@ -21,6 +21,7 @@ public class CommandRegistry {
         commands.put("TYPE", new TypeCommand());
         commands.put("XADD", new XaddCommand());
         commands.put("XRANGE" , new XRangeCommand());
+        commands.put("XREAD" , new XReadCommand());
     }
 
     public Command getCommand(String name) {

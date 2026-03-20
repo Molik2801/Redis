@@ -25,8 +25,7 @@ public class XRangeCommand implements Command {
        if(end.equals("+")){
           end = String.valueOf(Long.MAX_VALUE) + "-" + String.valueOf(Long.MAX_VALUE);
        }
-    //    System.out.println(start + end);
-    //    System.out.println(stream.entries);
+
        SortedMap<String, Map<String, String>> subMap = stream.entries.subMap(start , true , end , true);
     //    System.out.println(subMap);
 
