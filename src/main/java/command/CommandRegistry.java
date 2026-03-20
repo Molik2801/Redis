@@ -19,6 +19,7 @@ public class CommandRegistry {
         commands.put("LPOP", new LPopCommand());
         commands.put("LLEN", new LLenCommand());
         commands.put("TYPE", new TypeCommand());
+        commands.put("XADD", new XaddCommand());
     }
 
     public Command getCommand(String name) {
