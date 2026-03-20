@@ -12,13 +12,14 @@ public class XReadCommand implements Command {
 
     @Override
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
-        
-        String id = input.getLast();
+
+        int streamNum = (input.size() - 2) / 2;
 
         StringBuilder res = new StringBuilder();
-        res.append("*" + (input.size() - 3) + "\r\n");
+        res.append("*" + streamNum + "\r\n");
 
-        for(int i = 2 ; i < input.size() - 1 ; i++){
+
+        for(int i = 2 ; i < input.size() - streamNum ; i++){
             String key = input.get(i);
 
             res.append("*2\r\n");
@@ -26,8 +27,9 @@ public class XReadCommand implements Command {
             RedisStream stream = store.streams.get(key);
 
             // System.out.println(id);
+            String start = input.get(i + streamNum);
             String end = String.valueOf(Long.MAX_VALUE) + "-" + String.valueOf(Long.MAX_VALUE);  
-            SortedMap<String , Map<String , String>> subMap = stream.entries.subMap(id , false , end , true);
+            SortedMap<String , Map<String , String>> subMap = stream.entries.subMap(start , false , end , true);
 
             res.append("*" + subMap.size() + "\r\n");
             
