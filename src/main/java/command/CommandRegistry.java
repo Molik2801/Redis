@@ -1,0 +1,27 @@
+package command;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class CommandRegistry {
+    private final Map<String, Command> commands = new HashMap<>();
+
+    public CommandRegistry() {
+        // Register all your commands here
+        commands.put("BLPOP", new BlPopCommand());
+        commands.put("RPUSH", new RPushCommand());
+        commands.put("PING", new PingCommand());
+        commands.put("SET", new SetCommand());
+        commands.put("GET", new GetCommand());
+        commands.put("ECHO", new EchoCommand());
+        commands.put("LPUSH", new LPushCommand());  
+        commands.put("LRANGE", new LRangeCommand());
+        commands.put("LPOP", new LPopCommand());
+        commands.put("LLEN", new LLenCommand());
+        commands.put("TYPE", new TypeCommand());
+    }
+
+    public Command getCommand(String name) {
+        return commands.get(name.toUpperCase());
+    }
+}

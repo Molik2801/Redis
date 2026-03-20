@@ -1,15 +1,15 @@
+package protocol;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class Parser {
-    List<String> parse(String input){
+    
+    public List<String> parse(String input){
         if(input == null || input.isEmpty()){
             return new ArrayList<>();
         }
         List<String> args = new ArrayList<>();
-//        System.out.println("Hlo");
         int ind = 0;
         int totLen = 1;
         while(totLen > 0){
@@ -26,9 +26,6 @@ public class Parser {
                 totLen--;
             }
         }
-        System.out.println(args);
         return args;
     }
 }
-
-// *3\r\n$3\r\nSET\r\n$1\r\nx\r\n$1\r\n1\r\n

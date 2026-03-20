@@ -1,69 +1,33 @@
+import command.CommandRegistry;
+import server.ClientHandler;
+import store.RedisStore;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 
 public class Main {
-  static CommandHandler commandHandler = new CommandHandler();
+    public static void main(String[] args){
+        System.out.println("Starting Redis Clone on port 6379...");
 
-  public static void main(String[] args){
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    System.out.println("Logs from your program will appear here!");
+        // Instantiate your centralized architecture
+        RedisStore store = new RedisStore();
+        CommandRegistry registry = new CommandRegistry();
 
-    //  Uncomment the code below to pass the first stage
-        ServerSocket serverSocket = null;
-        Socket clientSocket = null;
         int port = 6379;
-        try {
-          serverSocket = new ServerSocket(port);
-          // Since the tester restarts your program quite often, setting SO_REUSEADDR
-          // ensures that we don't run into 'Address already in use' errors
-          serverSocket.setReuseAddress(true);
-          // Wait for connection from client.
-          while(true){
-            clientSocket = serverSocket.accept();
-            ClientHandler clientHandler = new ClientHandler(clientSocket);
-            Thread worker = new Thread(clientHandler);
-            worker.start();
-          }
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            serverSocket.setReuseAddress(true);
+            
+            while(true){
+                Socket clientSocket = serverSocket.accept();
+                // Pass the architecture into the handler
+                ClientHandler clientHandler = new ClientHandler(clientSocket, store, registry);
+                Thread worker = new Thread(clientHandler);
+                worker.start();
+            }
 
         } catch (IOException e) {
-          System.out.println("IOException: " + e.getMessage());
-        } finally {
-          try {
-            if (clientSocket != null) {
-              clientSocket.close();
-            }
-          } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
-          }
         }
-  }
-
-  static class ClientHandler implements Runnable {
-      Socket clientSocket;
-      ClientHandler(Socket clientSocket){
-        this.clientSocket = clientSocket;
-      }
-
-      @Override
-      public void run(){
-          try {
-              InputStream inputStream = clientSocket.getInputStream();
-              OutputStream outputStream = clientSocket.getOutputStream();
-              while(true){
-                  byte[] input = new byte[1024];
-                  int byteCount = inputStream.read(input);
-                  String inputString = new String(input).trim();
-                  Parser parser = new Parser();
-                  List<String> inputList = parser.parse(inputString);
-                  CommandHandler.commandResponse(inputList , outputStream);
-              }
-          } catch(IOException e){
-              throw new RuntimeException(e);
-          }
-      }
-  }
+    }
 }
