@@ -13,47 +13,55 @@ public class XaddCommand implements Command {
         String key = input.get(1);
         String id = input.get(2);
     
-
-        String curTime = id.split("-")[0];
-        String curSeq = id.split("-")[1];
         
-        if(curTime == "*"){
-
-        }
-        else if(curSeq.equals("*")){
-            int time = Integer.parseInt(curTime);
-            if(time == store.milisecondsTime){
+        if(id.equals("*")){
+            long sysTime = System.currentTimeMillis();
+            if(sysTime == store.milisecondsTime){
                 store.sequenceNumber += 1;
             }
-            else if(time > store.milisecondsTime){
-                store.milisecondsTime = time;
-                store.sequenceNumber = 0;
-            }
             else{
-                out.write("-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n".getBytes());
-                out.flush();
-                return;
+                store.milisecondsTime = sysTime;
+                store.sequenceNumber = 0;
             }
         }
         else{
-            int time = Integer.parseInt(curTime);
-            int seq = Integer.parseInt(curSeq);
-            if(time == 0 && seq == 0){
-                out.write("-ERR The ID specified in XADD must be greater than 0-0\r\n".getBytes());
-                out.flush();
-                return;
-            }
-            else if(time < store.milisecondsTime || (time == store.milisecondsTime && seq <= store.sequenceNumber)){
-                out.write("-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n".getBytes());
-                out.flush();
-                return;
+            String curTime = id.split("-")[0];
+            String curSeq = id.split("-")[1];
+            if(curSeq.equals("*")){
+                long time = Long.parseLong(curTime);
+                if(time == store.milisecondsTime){
+                    store.sequenceNumber += 1;
+                }
+                else if(time > store.milisecondsTime){
+                    store.milisecondsTime = time;
+                    store.sequenceNumber = 0;
+                }
+                else{
+                    out.write("-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n".getBytes());
+                    out.flush();
+                    return;
+                }
             }
             else{
-                store.milisecondsTime = time;
-                store.sequenceNumber = seq;
+                long time = Long.parseLong(curTime);
+                int seq = Integer.parseInt(curSeq);
+                if(time == 0 && seq == 0){
+                    out.write("-ERR The ID specified in XADD must be greater than 0-0\r\n".getBytes());
+                    out.flush();
+                    return;
+                }
+                else if(time < store.milisecondsTime || (time == store.milisecondsTime && seq <= store.sequenceNumber)){
+                    out.write("-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n".getBytes());
+                    out.flush();
+                    return;
+                }
+                else{
+                    store.milisecondsTime = time;
+                    store.sequenceNumber = seq;
+                }
             }
         }
-        
+
         id = store.milisecondsTime + "-" + store.sequenceNumber;
         ConcurrentHashMap<String , String> entries = new ConcurrentHashMap<>();
         entries.put("id", id);
