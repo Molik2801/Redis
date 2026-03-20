@@ -18,6 +18,12 @@ public class XRangeCommand implements Command {
        String end = input.get(3);
 
        RedisStream stream = store.streams.get(key);
+
+       if(start.equals("-")){
+          start = "0-0";
+       }
+    //    System.out.println(start + end);
+    //    System.out.println(stream.entries);
        SortedMap<String, Map<String, String>> subMap = stream.entries.subMap(start , true , end , true);
     //    System.out.println(subMap);
 
