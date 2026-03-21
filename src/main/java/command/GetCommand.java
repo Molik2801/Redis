@@ -11,7 +11,7 @@ public class GetCommand implements Command {
     public void execute(List<String> input , OutputStream out , RedisStore store) throws Exception {
         RedisData res = store.data.get(input.get(1));
         long curTime = System.currentTimeMillis();
-        if(curTime > res.expiryTime){
+        if(res == null || curTime > res.expiryTime){
             out.write("$-1\r\n".getBytes());
             store.data.remove(input.get(1));
         }
