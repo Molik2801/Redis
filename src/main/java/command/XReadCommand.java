@@ -73,22 +73,20 @@ public class XReadCommand implements Command {
 
         boolean available = false;
 
-        
-            RedisStream stream = store.streams.get(key);
-            if(stream != null){
-                SortedMap<String , Map<String , String>> subMap = stream.entries.subMap(id , false , String.valueOf(Long.MAX_VALUE) + "-" + String.valueOf(Long.MAX_VALUE) , true);
-                if(subMap.isEmpty()){
-                    queue.add(future);
-                }
-                else{
-                    available = true;
-                }
-            }
-            else{
+        RedisStream stream = store.streams.get(key);
+        if((stream != null) && (!id.equals("$"))){
+            SortedMap<String , Map<String , String>> subMap = stream.entries.subMap(id , false , String.valueOf(Long.MAX_VALUE) + "-" + String.valueOf(Long.MAX_VALUE) , true);
+            if(subMap.isEmpty()){
                 queue.add(future);
             }
-        
-
+            else{
+                available = true;
+            }
+        }
+        else{
+            queue.add(future);
+        }
+                    
         try {
             if(available){
                 List<String> newList = new ArrayList<>(input);
