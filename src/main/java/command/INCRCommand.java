@@ -10,14 +10,18 @@ public class INCRCommand implements Command{
     @Override
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
         String key = input.get(1);
-        String entry = store.data.get(key).value;
+        store.RedisData redisData = store.data.get(key);
 
         int numValue;
-        if(entry == null) {
+        if(redisData == null) {
+            // System.out.println("hi");
             numValue = 1;
         } else {
+            String entry = redisData.value;
             numValue = Integer.parseInt(entry) + 1;
         }
+
+        store.data.putIfAbsent(key , new store.RedisData());
         store.data.get(key).value = String.valueOf(numValue);
         out.write((":" + numValue + "\r\n").getBytes());
         out.flush();
