@@ -22,6 +22,7 @@ public class CommandRegistry {
         commands.put("XADD", new XaddCommand());
         commands.put("XRANGE" , new XRangeCommand());
         commands.put("XREAD" , new XReadCommand());
+        commands.put("INCR" , new INCRCommand());
     }
 
     public Command getCommand(String name) {
