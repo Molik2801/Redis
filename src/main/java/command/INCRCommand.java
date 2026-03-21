@@ -9,6 +9,7 @@ public class INCRCommand implements Command{
 
     @Override
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
+
         String key = input.get(1);
         store.RedisData redisData = store.data.get(key);
 

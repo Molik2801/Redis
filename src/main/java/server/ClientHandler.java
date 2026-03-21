@@ -8,6 +8,7 @@ import store.RedisStore;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClientHandler implements Runnable {
@@ -29,6 +30,10 @@ public class ClientHandler implements Runnable {
             
             Parser parser = new Parser();
             
+            //MULTI And EXEC 
+            boolean inQueue = false;
+            List<List<String>> queuedCommands = new ArrayList<>();
+
             while (true) {
                 byte[] input = new byte[1024];
                 int byteCount = inputStream.read(input);
@@ -44,6 +49,18 @@ public class ClientHandler implements Runnable {
                 Command command = registry.getCommand(commandName);
 
                 // 2. Execute it, passing the store!
+                if(commandName.equals("MULTI")){
+                    inQueue = true;
+                    outputStream.write("+OK\r\n".getBytes());
+                    outputStream.flush();
+                    continue;
+                }
+                if(inQueue){
+                    queuedCommands.add(inputList);
+                    outputStream.write("+QUEUED\r\n".getBytes());
+                    outputStream.flush();
+                    continue;
+                }
                 if (command != null) {
                     command.execute(inputList, outputStream, store);
                 } else {
