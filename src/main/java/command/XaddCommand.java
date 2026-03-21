@@ -4,7 +4,8 @@ import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import store.RedisStore;
 import store.RedisStream;
@@ -21,6 +22,9 @@ public class XaddCommand implements Command {
 
         String generatedId;
         Map<String , String> entry = new LinkedHashMap<>();
+
+        store.streamWaiters.putIfAbsent(key , new ConcurrentLinkedQueue<>());
+        ConcurrentLinkedQueue<CompletableFuture<String>> queue = store.streamWaiters.get(key);
 
         synchronized(stream){
             long newTime;
@@ -82,6 +86,12 @@ public class XaddCommand implements Command {
             stream.entries.put(generatedId , entry);
         }
 
+        while(!queue.isEmpty()){
+            CompletableFuture<String> future = queue.poll();
+            if(future.complete(generatedId)){
+                break;
+            }
+        }
         out.write(("$" + generatedId.length() + "\r\n" + generatedId + "\r\n").getBytes());
         out.flush();
     }
