@@ -55,6 +55,21 @@ public class ClientHandler implements Runnable {
                     outputStream.flush();
                     continue;
                 }
+                if(commandName.equals("EXEC")){
+                    if(!inQueue){
+                        outputStream.write("-ERR EXEC without MULTI\r\n".getBytes());
+                        outputStream.flush();
+                        continue;
+                    }
+                    inQueue = false;
+                    outputStream.write(("*" + queuedCommands.size() + "\r\n").getBytes());
+                    for(List<String> cmd : queuedCommands){
+                        Command c = registry.getCommand(cmd.get(0));
+                        c.execute(cmd , outputStream , store);
+                    }
+                    queuedCommands.clear();
+                    continue;
+                }
                 if(inQueue){
                     queuedCommands.add(inputList);
                     outputStream.write("+QUEUED\r\n".getBytes());
