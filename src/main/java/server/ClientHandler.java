@@ -48,7 +48,7 @@ public class ClientHandler implements Runnable {
                 String commandName = inputList.get(0);
                 Command command = registry.getCommand(commandName);
 
-                // 2. Execute it, passing the store!
+                // 2. Queuing Commands
                 if(commandName.equals("MULTI")){
                     inQueue = true;
                     outputStream.write("+OK\r\n".getBytes());
@@ -70,12 +70,26 @@ public class ClientHandler implements Runnable {
                     queuedCommands.clear();
                     continue;
                 }
+                if(commandName.equals("DISCARD")){
+                    if(!inQueue){
+                        outputStream.write("-ERR DISCARD without MULTI\r\n".getBytes());
+                        outputStream.flush();
+                        continue;
+                    }
+                    inQueue = false;
+                    queuedCommands.clear();
+                    outputStream.write("+OK\r\n".getBytes());
+                    outputStream.flush();
+                    continue;
+                }
                 if(inQueue){
                     queuedCommands.add(inputList);
                     outputStream.write("+QUEUED\r\n".getBytes());
                     outputStream.flush();
                     continue;
                 }
+
+                // Other Commands 
                 if (command != null) {
                     command.execute(inputList, outputStream, store);
                 } else {
