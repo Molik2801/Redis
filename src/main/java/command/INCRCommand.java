@@ -18,7 +18,14 @@ public class INCRCommand implements Command{
             numValue = 1;
         } else {
             String entry = redisData.value;
-            numValue = Integer.parseInt(entry) + 1;
+            try {
+                numValue = Integer.parseInt(entry) + 1;
+            } 
+            catch (NumberFormatException e) {
+                out.write("-ERR value is not an integer or out of range\r\n".getBytes());
+                out.flush();
+                return;
+            }
         }
 
         store.data.putIfAbsent(key , new store.RedisData());
