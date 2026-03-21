@@ -96,7 +96,9 @@ public class XReadCommand implements Command {
                 execute(newList , out , store);
             }
             else{
-                String futureId = future.get(blockTime , TimeUnit.MILLISECONDS);
+                String futureId;
+                if(blockTime == 0) futureId = future.get();
+                else futureId = future.get(blockTime , TimeUnit.MILLISECONDS);
                 StringBuilder newRes = new StringBuilder();
                 newRes.append("*1\r\n");
                 newRes.append("*2\r\n");
