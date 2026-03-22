@@ -24,6 +24,16 @@ public class SetCommand implements Command {
         store.data.put(input.get(1) , data);
         out.write("+OK\r\n".getBytes());
         out.flush();
+
+        StringBuilder replCommand = new StringBuilder();
+        replCommand.append("*" + input.size() + "\r\n");
+        for(String str : input){
+            replCommand.append("$" + str.length() + "\r\n" + str + "\r\n");
+        }
+        for(OutputStream replOut: store.replicaOutputStreams){
+            replOut.write(replCommand.toString().getBytes());
+            replOut.flush();
+        }
     }
     
 }

@@ -16,6 +16,7 @@ public class ClientHandler implements Runnable {
     private final RedisStore store;
     private final CommandRegistry registry;
     private final boolean isReplica;
+
     // Constructor Injection
     public ClientHandler(Socket clientSocket, RedisStore store, CommandRegistry registry , boolean isReplica) {
         this.clientSocket = clientSocket;
@@ -44,17 +45,19 @@ public class ClientHandler implements Runnable {
             }
 
             Parser parser = new Parser();
-            
-            //MULTI And EXEC 
+
+            //MULTI AND EXEC
             boolean inQueue = false;
             List<List<String>> queuedCommands = new ArrayList<>();
 
             while (true) {
+                
                 byte[] input = new byte[1024];
                 int byteCount = inputStream.read(input);
                 if (byteCount == -1) break; // Client disconnected
 
                 String inputString = new String(input, 0, byteCount).trim();
+
                 List<String> inputList = parser.parse(inputString);
 
                 if (inputList == null || inputList.isEmpty()) continue;

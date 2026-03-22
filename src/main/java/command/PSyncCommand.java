@@ -3,10 +3,10 @@ package command;
 import java.io.OutputStream;
 import java.util.List;
 
-import store.RedisStore;
 import store.RedisRDBContent;
+import store.RedisStore;
 
-public class PSyncCommand implements Command {
+public class PSyncCommand implements Command{
 
     @Override
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
@@ -15,6 +15,8 @@ public class PSyncCommand implements Command {
             out.write(("$" + RedisRDBContent.RDBFile.length + "\r\n").getBytes());
             out.write(RedisRDBContent.RDBFile);
             out.flush();
+            store.replicaOutputStreams.add(out);
         }
     }
+    
 }
