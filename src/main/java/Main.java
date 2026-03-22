@@ -46,10 +46,12 @@ public class Main {
                     OutputStream replicaOutput = replicaSocket.getOutputStream();
                     InputStream replicaInput = replicaSocket.getInputStream();
 
-                    // First PING Command
+                    byte[] buffer = new byte[1024];
+                    
+                    //Handshakes
+
                     replicaOutput.write("*1\r\n$4\r\nPING\r\n".getBytes());
                     replicaOutput.flush();
-                    byte[] buffer = new byte[1024];
                     int byteCount = replicaInput.read(buffer);
 
                     replicaOutput.write(("*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n" + finalPort + "\r\n").getBytes());
@@ -65,7 +67,9 @@ public class Main {
                     replicaOutput.write("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n".getBytes());
                     replicaOutput.flush();
 
-                    byteCount = replicaInput.read(buffer);
+                    //Now synced and ready for further commands
+                    ClientHandler masterListener = new ClientHandler(replicaSocket , store , registry , true);
+                    masterListener.run();
 
                 } catch (IOException e) {
                     System.out.println("Failed to connect to master: " + e.getMessage());
@@ -80,7 +84,7 @@ public class Main {
             while(true){
                 Socket clientSocket = serverSocket.accept();
                 // Pass the architecture into the handler
-                ClientHandler clientHandler = new ClientHandler(clientSocket, store, registry);
+                ClientHandler clientHandler = new ClientHandler(clientSocket, store, registry , false);
                 Thread worker = new Thread(clientHandler);
                 worker.start();
             }

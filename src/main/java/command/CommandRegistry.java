@@ -24,6 +24,7 @@ public class CommandRegistry {
         commands.put("XREAD" , new XReadCommand());
         commands.put("INCR" , new INCRCommand());
         commands.put("INFO" , new InfoCommand());
+        commands.put("REPLCONF" , new ReplConfCommand());
     }
 
     public Command getCommand(String name) {

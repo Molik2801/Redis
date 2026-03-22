@@ -15,19 +15,34 @@ public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final RedisStore store;
     private final CommandRegistry registry;
-
+    private final boolean isReplica;
     // Constructor Injection
-    public ClientHandler(Socket clientSocket, RedisStore store, CommandRegistry registry) {
+    public ClientHandler(Socket clientSocket, RedisStore store, CommandRegistry registry , boolean isReplica) {
         this.clientSocket = clientSocket;
         this.store = store;
         this.registry = registry;
+        this.isReplica = isReplica;
     }
 
     @Override
     public void run() {
-        try (InputStream inputStream = clientSocket.getInputStream();
-             OutputStream outputStream = clientSocket.getOutputStream()) {
+        try {
             
+            InputStream inputStream = clientSocket.getInputStream();
+            OutputStream outputStream;
+
+            if(isReplica){
+                outputStream = new OutputStream() {
+                    @Override
+                    public void write(int b){
+                        //No replies to replicas
+                    }
+                };
+            }
+            else{
+                outputStream = clientSocket.getOutputStream();
+            }
+
             Parser parser = new Parser();
             
             //MULTI And EXEC 
