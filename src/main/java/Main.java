@@ -15,19 +15,18 @@ public class Main {
         RedisStore store = new RedisStore();
         CommandRegistry registry = new CommandRegistry();
 
-        int portNumber = 6379; // Default Redis port
+        int port = 6379; // Default Redis port
 
         //Custom port support
         if(args.length > 0 && args[0].equals("--port")){
             try {
-                portNumber = Integer.parseInt(args[1]);
+                port = Integer.parseInt(args[1]);
             } catch (NumberFormatException e) {
                 System.out.println("Invalid port number. Using default port 6379.");
             }
         }
-        System.out.println("Starting Redis Clone on port " + portNumber + "...");
-        
-        final int port = portNumber;
+        System.out.println("Starting Redis Clone on port " + port + "...");
+
         // Master-Slave support
         if(args.length > 2){
             if(args[2].equals("--replicaof")){
@@ -38,31 +37,36 @@ public class Main {
         }
 
         //Master-Slave Replication Thread
+        final int finalPort = port;
         if(store.isSlave){
             new Thread(() -> {
 
-                try(Socket masterSocket = new Socket(store.masterHost , store.masterPort)){
+                try(Socket replicaSocket = new Socket(store.masterHost , store.masterPort)){
 
-                    OutputStream masterOutput = masterSocket.getOutputStream();
-                    InputStream masterInput = masterSocket.getInputStream();
+                    OutputStream replicaOutput = replicaSocket.getOutputStream();
+                    InputStream replicaInput = replicaSocket.getInputStream();
 
                     // First PING Command
-                    masterOutput.write("*1\r\n$4\r\nPING\r\n".getBytes());
-                    masterOutput.flush();
-
+                    replicaOutput.write("*1\r\n$4\r\nPING\r\n".getBytes());
+                    replicaOutput.flush();
                     byte[] buffer = new byte[1024];
-                    int byteCount = masterInput.read(buffer);
+                    int byteCount = replicaInput.read(buffer);
 
-                    masterOutput.write(("*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n" + port + "\r\n").getBytes());
-                    masterOutput.flush();
+                    replicaOutput.write(("*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n" + finalPort + "\r\n").getBytes());
+                    replicaOutput.flush();
 
-                    byteCount = masterInput.read(buffer);
+                    byteCount = replicaInput.read(buffer);
 
-                    masterOutput.write("*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n".getBytes());
-                    masterOutput.flush();
+                    replicaOutput.write("*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n".getBytes());
+                    replicaOutput.flush();
 
-                    byteCount = masterInput.read(buffer);
-                    
+                    byteCount = replicaInput.read(buffer);
+
+                    replicaOutput.write("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n".getBytes());
+                    replicaOutput.flush();
+
+                    byteCount = replicaInput.read(buffer);
+
                 } catch (IOException e) {
                     System.out.println("Failed to connect to master: " + e.getMessage());
                 }
