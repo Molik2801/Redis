@@ -9,6 +9,7 @@ public class RedisStore {
 
     public boolean isSlave = false;
     public String masterHost = null;
+    public int masterPort = 6379;
 
     public  final ConcurrentHashMap<String , RedisData> data = new ConcurrentHashMap<>();
     
