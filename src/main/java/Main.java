@@ -25,6 +25,14 @@ public class Main {
         }
         System.out.println("Starting Redis Clone on port " + port + "...");
         
+        // Master-Slave support
+        if(args.length > 2){
+            if(args[2].equals("--replicaof")){
+                store.isSlave = true;
+                store.masterHost = args[3];
+            }
+        }
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             serverSocket.setReuseAddress(true);
             

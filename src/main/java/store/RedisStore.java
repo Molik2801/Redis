@@ -7,6 +7,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RedisStore {
 
+    public boolean isSlave = false;
+    public String masterHost = null;
+
     public  final ConcurrentHashMap<String , RedisData> data = new ConcurrentHashMap<>();
     
     public  final ConcurrentHashMap<String , ArrayDeque<String>> list = new ConcurrentHashMap<>();
