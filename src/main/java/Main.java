@@ -3,6 +3,7 @@ import server.ClientHandler;
 import store.RedisStore;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,18 +15,19 @@ public class Main {
         RedisStore store = new RedisStore();
         CommandRegistry registry = new CommandRegistry();
 
-        int port = 6379; // Default Redis port
+        int portNumber = 6379; // Default Redis port
 
         //Custom port support
         if(args.length > 0 && args[0].equals("--port")){
             try {
-                port = Integer.parseInt(args[1]);
+                portNumber = Integer.parseInt(args[1]);
             } catch (NumberFormatException e) {
                 System.out.println("Invalid port number. Using default port 6379.");
             }
         }
-        System.out.println("Starting Redis Clone on port " + port + "...");
+        System.out.println("Starting Redis Clone on port " + portNumber + "...");
         
+        final int port = portNumber;
         // Master-Slave support
         if(args.length > 2){
             if(args[2].equals("--replicaof")){
@@ -37,13 +39,34 @@ public class Main {
 
         //Master-Slave Replication Thread
         if(store.isSlave){
-            try (Socket masterSocket = new Socket(store.masterHost , store.masterPort)){
-                OutputStream masterOut = masterSocket.getOutputStream();
-                masterOut.write("*1\r\n$4\r\nPING\r\n".getBytes());
-                masterOut.flush();
-            } catch (IOException e) {
-                System.out.println("Failed to connect to master: " + e.getMessage());
-            }
+            new Thread(() -> {
+
+                try(Socket masterSocket = new Socket(store.masterHost , store.masterPort)){
+
+                    OutputStream masterOutput = masterSocket.getOutputStream();
+                    InputStream masterInput = masterSocket.getInputStream();
+
+                    // First PING Command
+                    masterOutput.write("*1\r\n$4\r\nPING\r\n".getBytes());
+                    masterOutput.flush();
+
+                    byte[] buffer = new byte[1024];
+                    int byteCount = masterInput.read(buffer);
+
+                    masterOutput.write(("*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n" + port + "\r\n").getBytes());
+                    masterOutput.flush();
+
+                    byteCount = masterInput.read(buffer);
+
+                    masterOutput.write("*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n".getBytes());
+                    masterOutput.flush();
+
+                    byteCount = masterInput.read(buffer);
+                    
+                } catch (IOException e) {
+                    System.out.println("Failed to connect to master: " + e.getMessage());
+                }
+            }).start();
         }
 
         //ClientSocket handling
