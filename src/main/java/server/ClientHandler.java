@@ -56,62 +56,65 @@ public class ClientHandler implements Runnable {
                 int byteCount = inputStream.read(input);
                 if (byteCount == -1) break; // Client disconnected
 
+                List<List<String>> commands = new ArrayList<>();
                 String inputString = new String(input, 0, byteCount).trim();
 
-                List<String> inputList = parser.parse(inputString);
+                List<List<String>> commandList = parser.parse(inputString , commands);
 
-                if (inputList == null || inputList.isEmpty()) continue;
+                if (commandList == null || commandList.isEmpty()) continue;
 
-                // 1. Look up the command in the registry
-                String commandName = inputList.get(0);
-                Command command = registry.getCommand(commandName);
-
-                // 2. Queuing Commands
-                if(commandName.equals("MULTI")){
-                    inQueue = true;
-                    outputStream.write("+OK\r\n".getBytes());
-                    outputStream.flush();
-                    continue;
-                }
-                if(commandName.equals("EXEC")){
-                    if(!inQueue){
-                        outputStream.write("-ERR EXEC without MULTI\r\n".getBytes());
+                for(List<String> inputList : commandList){
+                    // 1. Look up the command in the registry
+                    String commandName = inputList.get(0);
+                    Command command = registry.getCommand(commandName);
+    
+                    // 2. Queuing Commands
+                    if(commandName.equals("MULTI")){
+                        inQueue = true;
+                        outputStream.write("+OK\r\n".getBytes());
                         outputStream.flush();
                         continue;
                     }
-                    inQueue = false;
-                    outputStream.write(("*" + queuedCommands.size() + "\r\n").getBytes());
-                    for(List<String> cmd : queuedCommands){
-                        Command c = registry.getCommand(cmd.get(0));
-                        c.execute(cmd , outputStream , store);
+                    if(commandName.equals("EXEC")){
+                        if(!inQueue){
+                            outputStream.write("-ERR EXEC without MULTI\r\n".getBytes());
+                            outputStream.flush();
+                            continue;
+                        }
+                        inQueue = false;
+                        outputStream.write(("*" + queuedCommands.size() + "\r\n").getBytes());
+                        for(List<String> cmd : queuedCommands){
+                            Command c = registry.getCommand(cmd.get(0));
+                            c.execute(cmd , outputStream , store);
+                        }
+                        queuedCommands.clear();
+                        continue;
                     }
-                    queuedCommands.clear();
-                    continue;
-                }
-                if(commandName.equals("DISCARD")){
-                    if(!inQueue){
-                        outputStream.write("-ERR DISCARD without MULTI\r\n".getBytes());
+                    if(commandName.equals("DISCARD")){
+                        if(!inQueue){
+                            outputStream.write("-ERR DISCARD without MULTI\r\n".getBytes());
+                            outputStream.flush();
+                            continue;
+                        }
+                        inQueue = false;
+                        queuedCommands.clear();
+                        outputStream.write("+OK\r\n".getBytes());
                         outputStream.flush();
                         continue;
                     }
-                    inQueue = false;
-                    queuedCommands.clear();
-                    outputStream.write("+OK\r\n".getBytes());
-                    outputStream.flush();
-                    continue;
-                }
-                if(inQueue){
-                    queuedCommands.add(inputList);
-                    outputStream.write("+QUEUED\r\n".getBytes());
-                    outputStream.flush();
-                    continue;
-                }
-
-                // Other Commands 
-                if (command != null) {
-                    command.execute(inputList, outputStream, store);
-                } else {
-                    outputStream.write(("-ERR unknown command '" + commandName + "'\r\n").getBytes());
+                    if(inQueue){
+                        queuedCommands.add(inputList);
+                        outputStream.write("+QUEUED\r\n".getBytes());
+                        outputStream.flush();
+                        continue;
+                    }
+    
+                    // Other Commands 
+                    if (command != null) {
+                        command.execute(inputList, outputStream, store);
+                    } else {
+                        outputStream.write(("-ERR unknown command '" + commandName + "'\r\n").getBytes());
+                    }
                 }
             }
         } catch (Exception e) {

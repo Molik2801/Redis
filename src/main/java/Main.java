@@ -67,6 +67,22 @@ public class Main {
                     replicaOutput.write("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n".getBytes());
                     replicaOutput.flush();
 
+                    // 1. Read the +FULLRESYNC line
+                    String resyncResponse = readLine(replicaInput);
+
+                    // 2. Read the RDB length header (e.g., "$88\r\n")
+                    String rdbHeader = readLine(replicaInput); 
+
+                    // 3. Extract the integer 88 from the header
+                    int rdbLength = Integer.parseInt(rdbHeader.substring(1, rdbHeader.length() - 2));
+
+                    // 4. Read EXACTLY 88 bytes from the pipe to swallow the file
+                    byte[] rdbFile = new byte[rdbLength];
+                    int bytesRead = 0;
+                    while (bytesRead < rdbLength) {
+                        bytesRead += replicaInput.read(rdbFile, bytesRead, rdbLength - bytesRead);
+                    }
+
                     //Now synced and ready for further commands
                     ClientHandler masterListener = new ClientHandler(replicaSocket , store , registry , true);
                     masterListener.run();
@@ -86,6 +102,7 @@ public class Main {
                 // Pass the architecture into the handler
                 ClientHandler clientHandler = new ClientHandler(clientSocket, store, registry , false);
                 Thread worker = new Thread(clientHandler);
+            
                 worker.start();
             }
 
@@ -93,4 +110,17 @@ public class Main {
             System.out.println("IOException: " + e.getMessage());
         }
     }
+
+
+    private static String readLine(InputStream in) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    int b;
+    while ((b = in.read()) != -1) {
+        sb.append((char) b);
+        if (sb.toString().endsWith("\r\n")) {
+            break;
+        }
+    }
+    return sb.toString();
+}
 }
