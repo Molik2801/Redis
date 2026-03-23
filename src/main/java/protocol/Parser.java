@@ -20,7 +20,7 @@ public class Parser {
                     commands.add(args);
                     args = new ArrayList<>();
                 }
-                // System.out.println(ind);
+
                 int endPt = input.indexOf("\r\n" , ind);
                 totLen = Integer.parseInt(input.substring(ind+1 , endPt));
                 ind = endPt + 2;

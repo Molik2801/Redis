@@ -61,6 +61,7 @@ public class ClientHandler implements Runnable {
 
                 List<List<String>> commandList = parser.parse(inputString , commands);
 
+
                 if (commandList == null || commandList.isEmpty()) continue;
 
                 for(List<String> inputList : commandList){
