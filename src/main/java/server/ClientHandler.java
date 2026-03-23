@@ -32,17 +32,13 @@ public class ClientHandler implements Runnable {
             InputStream inputStream = clientSocket.getInputStream();
             OutputStream outputStream;
 
-            if(isReplica){
-                outputStream = new OutputStream() {
-                    @Override
-                    public void write(int b){
-                        //No replies to replicas
-                    }
-                };
-            }
-            else{
-                outputStream = clientSocket.getOutputStream();
-            }
+            OutputStream realStream = clientSocket.getOutputStream();
+            OutputStream blankOutputStream = new OutputStream() {
+                @Override
+                public void write(int b){
+                     //No replies fro replicas
+                }
+            };
 
             Parser parser = new Parser();
 
@@ -56,20 +52,26 @@ public class ClientHandler implements Runnable {
                 int byteCount = inputStream.read(input);
                 if (byteCount == -1) break; // Client disconnected
 
-                List<List<String>> commands = new ArrayList<>();
                 String inputString = new String(input, 0, byteCount).trim();
 
-                List<List<String>> commandList = parser.parse(inputString , commands);
+                List<List<String>> commandList = parser.parse(inputString);
 
 
                 if (commandList == null || commandList.isEmpty()) continue;
 
                 for(List<String> inputList : commandList){
-                    // 1. Look up the command in the registry
+
                     String commandName = inputList.get(0);
                     Command command = registry.getCommand(commandName);
-    
-                    // 2. Queuing Commands
+                    
+                    // Assigning outputstream
+                    if(isReplica){
+                        if(commandName.equals("REPLCONF")) outputStream = realStream;
+                        else outputStream = blankOutputStream;
+                    }
+                    else outputStream = realStream;
+
+                    // Queuing Commands
                     if(commandName.equals("MULTI")){
                         inQueue = true;
                         outputStream.write("+OK\r\n".getBytes());

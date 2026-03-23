@@ -5,11 +5,12 @@ import java.util.List;
 
 public class Parser {
     
-    public List<List<String>> parse(String input , List<List<String>> commands){
+    public List<List<String>> parse(String input){
         if(input == null || input.isEmpty()){
             return new ArrayList<>();
         }
 
+        List<List<String>> commands = new ArrayList<>();
         List<String> args = new ArrayList<>();
         int ind = 0;
         int totLen = 1;
