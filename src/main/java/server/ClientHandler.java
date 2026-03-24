@@ -4,6 +4,7 @@ import command.Command;
 import command.CommandRegistry;
 import protocol.Parser;
 import store.RedisStore;
+import store.ReplicaConnection;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,6 +17,7 @@ public class ClientHandler implements Runnable {
     private final RedisStore store;
     private final CommandRegistry registry;
     private final boolean isReplica;
+    private ReplicaConnection myConnection = null;
 
     // Constructor Injection
     public ClientHandler(Socket clientSocket, RedisStore store, CommandRegistry registry , boolean isReplica) {
@@ -64,6 +66,26 @@ public class ClientHandler implements Runnable {
                     String commandName = inputList.get(0);
                     Command command = registry.getCommand(commandName);
                     
+                    //Replica-Master offset maintenance
+                    //Replica sending PSYNC command to master 
+                    //now the particular master-replica connection is maintained by this thread and the sticky variable myconnection is stored in master's component on the particular thread for that replica
+                    //and when multiple replica come there will be multiple connection , different thread , different myConnection variable, all in master's side
+                    if(commandName.equals("PSYNC")){
+                        
+                        this.myConnection = new ReplicaConnection(realStream);
+                        store.replicaOutputStreams.add(this.myConnection);
+                        command.execute(inputList, realStream, store);
+                        continue;
+
+                    }
+
+                    //Master getting reply of GetAck command i.e offset of that particular replica and updating the offset of the particular replica connected to this thread in its myconnection variable.
+                    if(commandName.equals("REPLCONF") && inputList.size() > 2 && inputList.get(1).equals("ACK")){
+                        int ackOffset = Integer.parseInt(inputList.get(2));
+                        if(this.myConnection != null) this.myConnection.ackOffset = ackOffset;
+                        continue;
+                    }                
+
                     // Assigning outputstream
                     if(isReplica){
                         if(commandName.equals("REPLCONF")){ 

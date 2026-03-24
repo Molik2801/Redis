@@ -15,7 +15,6 @@ public class PSyncCommand implements Command{
             out.write(("$" + RedisRDBContent.RDBFile.length + "\r\n").getBytes());
             out.write(RedisRDBContent.RDBFile);
             out.flush();
-            store.replicaOutputStreams.add(out);
         }
     }
     
