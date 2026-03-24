@@ -2,7 +2,6 @@ package store;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +16,9 @@ public class RedisStore {
     public int ackOffset = 0;
     public int masterOffset = 0;
 
+    public String dirName;
+    public String dbFileName;
+    
     public  final ConcurrentHashMap<String , RedisData> data = new ConcurrentHashMap<>();
     
     public  final ConcurrentHashMap<String , ArrayDeque<String>> list = new ConcurrentHashMap<>();

@@ -36,6 +36,12 @@ public class Main {
             }
         }
 
+        //RDBFile 
+        if(args.length > 3){
+            if(args[0].equals("--dir")) store.dirName = args[1];
+            if(args[2].equals("--dbfileName")) store.dbFileName = args[3];
+        }
+
         //Master-Slave Replication Thread
         final int finalPort = port;
         if(store.isSlave){
