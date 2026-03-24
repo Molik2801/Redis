@@ -26,6 +26,7 @@ public class CommandRegistry {
         commands.put("INFO" , new InfoCommand());
         commands.put("REPLCONF" , new ReplConfCommand());
         commands.put("PSYNC" , new PSyncCommand());
+        commands.put("WAIT" , new WaitCommand());
     }
 
     public Command getCommand(String name) {

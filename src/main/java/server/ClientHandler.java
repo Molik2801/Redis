@@ -53,7 +53,6 @@ public class ClientHandler implements Runnable {
                 if (byteCount == -1) break; // Client disconnected
 
                 String inputString = new String(input, 0, byteCount).trim();
-                if(isReplica)System.out.println(Thread.currentThread().getName() + " " + inputString);
                 List<List<String>> commandList = parser.parse(inputString);
 
                 if(isReplica) store.ackOffset += byteCount;
