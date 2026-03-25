@@ -30,6 +30,7 @@ public class CommandRegistry {
         commands.put("CONFIG", new ConfigCommand());
         commands.put("SUBSCRIBE", new SubscribeCommand());
         commands.put("PUBLISH", new PublishCommand());
+        commands.put("UNSUBSCRIBE", new UnsubscribeCommand());
     }
 
     public Command getCommand(String name) {
