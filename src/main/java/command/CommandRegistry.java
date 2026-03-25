@@ -29,6 +29,7 @@ public class CommandRegistry {
         commands.put("WAIT" , new WaitCommand());
         commands.put("CONFIG", new ConfigCommand());
         commands.put("SUBSCRIBE", new SubscribeCommand());
+        commands.put("PUBLISH", new PublishCommand());
     }
 
     public Command getCommand(String name) {
