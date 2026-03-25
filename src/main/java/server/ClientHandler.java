@@ -104,6 +104,10 @@ public class ClientHandler implements Runnable {
                             outputStream.write(("-ERR can't execute '" + commandName + "' when one or more subscriptions exist\r\n").getBytes());
                             continue;
                         }
+                        if(commandName.equals("PING")){
+                            outputStream.write("*2\r\n$4\r\npong\r\n$0\r\n\r\n".getBytes());
+                            continue;
+                        }
                     }
 
                     // Queuing Commands
