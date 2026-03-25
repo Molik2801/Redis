@@ -28,6 +28,7 @@ public class CommandRegistry {
         commands.put("PSYNC" , new PSyncCommand());
         commands.put("WAIT" , new WaitCommand());
         commands.put("CONFIG", new ConfigCommand());
+        commands.put("SUBSCRIBE", new SubscribeCommand());
     }
 
     public Command getCommand(String name) {
