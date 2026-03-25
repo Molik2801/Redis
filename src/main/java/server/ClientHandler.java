@@ -18,6 +18,7 @@ public class ClientHandler implements Runnable {
     private final CommandRegistry registry;
     private final boolean isReplica;
     private ReplicaConnection myConnection = null;
+    private boolean subscribedMode = false;
 
     // Constructor Injection
     public ClientHandler(Socket clientSocket, RedisStore store, CommandRegistry registry , boolean isReplica) {
@@ -95,6 +96,15 @@ public class ClientHandler implements Runnable {
                         else outputStream = blankOutputStream;
                     }
                     else outputStream = realStream;
+
+                    //PUB/SUB
+                    if(commandName.equals("SUBSCRIBE")) this.subscribedMode = true;
+                    if(this.subscribedMode){
+                        if(!store.allowedCommands.contains(commandName)){
+                            outputStream.write(("-ERR can't execute '" + commandName + "' when one or more subscriptions exist\r\n").getBytes());
+                            continue;
+                        }
+                    }
 
                     // Queuing Commands
                     if(commandName.equals("MULTI")){

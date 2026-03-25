@@ -3,6 +3,7 @@ package store;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -29,7 +30,9 @@ public class RedisStore {
     public ConcurrentHashMap<String , ConcurrentLinkedQueue<CompletableFuture<String>>> streamWaiters = new ConcurrentHashMap<>();
     public  ConcurrentHashMap<String, ConcurrentLinkedQueue<CompletableFuture<String>>> waiters = new ConcurrentHashMap<>();
 
+    //PUB/SUB
     public ConcurrentHashMap<OutputStream , Set<String>> subscriptions = new ConcurrentHashMap<>();
+    public final HashSet<String> allowedCommands = new HashSet<>(Set.of("SUBSCRIBE" , "UNSUBSCRIBE" , "PING" , "PSUBSCRIBE" , "PUNSUBSCRIBE" , "QUIT"));
 
     //List for slave replication storing outputstreams of all replicas
     public List<ReplicaConnection> replicaOutputStreams = new CopyOnWriteArrayList<>();
