@@ -19,8 +19,8 @@ public class AclCommand implements Command {
             String user = input.get(2);
             resp.append("*2\r\n");
             resp.append("$5\r\nflags\r\n");
-            resp.append("*0\r\n");
-            // resp.append("$6\r\nnopass\r\n");
+            resp.append("*1\r\n");
+            resp.append("$6\r\nnopass\r\n");
         }
 
         out.write(resp.toString().getBytes());
