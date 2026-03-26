@@ -25,7 +25,7 @@ public class GeoAddCommand implements Command{
             return;
        }
 
-       double score = locationScore(latitude , longitude);
+       double score = locationToScore(latitude , longitude);
        String sscore = String.valueOf(score);
 
        store.sortedSet.computeIfAbsent(key, k -> new RedisZSet());
@@ -46,7 +46,7 @@ public class GeoAddCommand implements Command{
        out.flush();
     }
 
-    public double locationScore(double latitude , double longitude){
+    public double locationToScore(double latitude , double longitude){
         
         double latMax = 85.05112878;
         double lonMax = 180;
