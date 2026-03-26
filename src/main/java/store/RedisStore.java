@@ -37,6 +37,10 @@ public class RedisStore {
     //sortedSet
     public ConcurrentHashMap<String , RedisZSet> sortedSet = new ConcurrentHashMap<>();
 
+
+    //userAuth
+    public ConcurrentHashMap<String , UserData> userAuth = new ConcurrentHashMap<>();
+
     //List for slave replication storing outputstreams of all replicas
     public List<ReplicaConnection> replicaOutputStreams = new CopyOnWriteArrayList<>();
 
@@ -63,11 +67,3 @@ public class RedisStore {
     }
 }
 
-
-
-// Key value store
-// sorted based on scores.
-// must be able to tell the rank 
-// retrievable on name
-// retrievable in the range of rank
-// can tell score for a particualr name (can be done using map with key as name and value as score)
