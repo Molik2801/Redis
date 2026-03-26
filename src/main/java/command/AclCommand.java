@@ -17,10 +17,12 @@ public class AclCommand implements Command {
         }
         if(command.toUpperCase().equals("GETUSER")){
             String user = input.get(2);
-            resp.append("*2\r\n");
+            resp.append("*4\r\n");
             resp.append("$5\r\nflags\r\n");
             resp.append("*1\r\n");
             resp.append("$6\r\nnopass\r\n");
+            resp.append("$9\r\npasswords\r\n");
+            resp.append("*0\r\n");
         }
 
         out.write(resp.toString().getBytes());
