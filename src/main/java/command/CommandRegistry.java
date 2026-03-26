@@ -34,6 +34,7 @@ public class CommandRegistry {
         commands.put("ZADD", new ZAddCommand());
         commands.put("ZRANK", new ZRankCommand());
         commands.put("ZRANGE", new ZRangeCommand());
+        commands.put("ZCARD", new ZCardCommand());
     }
 
     public Command getCommand(String name) {
