@@ -4,16 +4,16 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class UserData {
     public boolean nopass;
-    public List<String> passwords;
+    public Set<String> passwords;
 
     public UserData(){
         this.nopass = true;
-        this.passwords = new ArrayList<>();
+        this.passwords = new HashSet<>();
     }
 
     public byte[] getSHA(String input) throws NoSuchAlgorithmException
