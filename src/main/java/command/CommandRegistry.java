@@ -31,6 +31,7 @@ public class CommandRegistry {
         commands.put("SUBSCRIBE", new SubscribeCommand());
         commands.put("PUBLISH", new PublishCommand());
         commands.put("UNSUBSCRIBE", new UnsubscribeCommand());
+        commands.put("ZADD", new ZAddCommand());
     }
 
     public Command getCommand(String name) {
