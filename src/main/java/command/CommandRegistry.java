@@ -40,6 +40,7 @@ public class CommandRegistry {
         commands.put("GEOADD", new GeoAddCommand());
         commands.put("GEOPOS", new GeoPosCommand());
         commands.put("GEODIST", new GeoDistCommand());
+        commands.put("GEOSEARCH", new GeoSearchCommand());
     }
 
     public Command getCommand(String name) {
