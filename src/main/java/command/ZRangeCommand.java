@@ -16,13 +16,25 @@ public class ZRangeCommand implements Command{
         int end = Integer.parseInt(input.get(3));
 
         RedisZSet zSet = store.sortedSet.get(key);
-        if((zSet == null) || (start > end) || (zSet != null && start >= zSet.orderedSet.size())){
+
+        if(zSet == null){
             out.write("*0\r\n".getBytes());
             out.flush();
             return;
         }
 
-        end = Math.min(end , zSet.orderedSet.size()-1);
+        int totalSize = zSet.memberScores.size();
+        if(start < 0) start = Math.max(0, totalSize + start);
+        if(end < 0) end = Math.max(0, totalSize + end);
+
+        if((start > end) || start >= totalSize){
+            out.write("*0\r\n".getBytes());
+            out.flush();
+            return;
+        }
+
+
+        end = Math.min(end , totalSize-1);
 
         int totalMembers = end - start + 1;
 
