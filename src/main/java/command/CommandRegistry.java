@@ -39,6 +39,7 @@ public class CommandRegistry {
         commands.put("ZREM", new ZRemCommand());
         commands.put("GEOADD", new GeoAddCommand());
         commands.put("GEOPOS", new GeoPosCommand());
+        commands.put("GEODIST", new GeoDistCommand());
     }
 
     public Command getCommand(String name) {

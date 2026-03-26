@@ -25,13 +25,15 @@ public class GeoAddCommand implements Command{
             return;
        }
 
-       double score = locationToScore(latitude , longitude);
-       String sscore = String.valueOf(score);
-
+       
        store.sortedSet.computeIfAbsent(key, k -> new RedisZSet());
        RedisZSet zSet = store.sortedSet.get(key);
-       ZSetEntry entry = new ZSetEntry(score, place);
 
+       double score = zSet.locationToScore(latitude , longitude);
+       String sscore = String.valueOf(score);
+       
+       ZSetEntry entry = new ZSetEntry(score, place);
+       
        int memberAdded = 1;
        if(zSet.memberScores.containsKey(place)){
            Double oldScore = zSet.memberScores.get(place);
@@ -44,27 +46,6 @@ public class GeoAddCommand implements Command{
 
        out.write((":" + memberAdded + "\r\n").getBytes());
        out.flush();
-    }
-
-    public double locationToScore(double latitude , double longitude){
-        
-        double latMax = 85.05112878;
-        double lonMax = 180;
-
-        double normalised_latitude = ((1 << 26) * (latitude + latMax)) / (latMax * 2);
-        double normalised_longitude = ((1 << 26) * (longitude + lonMax)) / (lonMax * 2);
-
-        long score = interleave((int) normalised_latitude , (int) normalised_longitude);
-        return (double) score;
-    }
-
-    public long interleave(int x , int y){
-        long z = 0;
-        for(int i = 0 ; i < 32 ; i++){
-            z |= (long) (x & (1 << i)) << i;
-            z |= (long) (y & (1 << i)) << (i+1);
-        }
-        return z;
     }
     
 }
