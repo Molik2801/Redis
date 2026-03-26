@@ -37,6 +37,7 @@ public class CommandRegistry {
         commands.put("ZCARD", new ZCardCommand());
         commands.put("ZSCORE", new ZScoreCommand());
         commands.put("ZREM", new ZRemCommand());
+        commands.put("GEOADD", new GeoAddCommand());
     }
 
     public Command getCommand(String name) {
