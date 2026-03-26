@@ -21,9 +21,18 @@ public class ZAddCommand implements Command {
         store.sortedSet.computeIfAbsent(key, k -> new RedisZSet());
         
         RedisZSet zSet = store.sortedSet.get(key);
+
+        int memberAdded = 1;
+        if(zSet.memberScores.containsKey(member)){
+            Double oldScore = zSet.memberScores.get(member);
+            ZSetEntry oldEntry = new ZSetEntry(oldScore, member);
+            zSet.orderedSet.remove(oldEntry);
+            memberAdded = 0;
+        }
+        zSet.memberScores.put(member, score);
         zSet.orderedSet.add(entry);
 
-        out.write(":1\r\n".getBytes());
+        out.write((":" + memberAdded + "\r\n").getBytes());
         out.flush();
     }
 }
