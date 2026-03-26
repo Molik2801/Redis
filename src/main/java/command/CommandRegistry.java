@@ -33,6 +33,7 @@ public class CommandRegistry {
         commands.put("UNSUBSCRIBE", new UnsubscribeCommand());
         commands.put("ZADD", new ZAddCommand());
         commands.put("ZRANK", new ZRankCommand());
+        commands.put("ZRANGE", new ZRangeCommand());
     }
 
     public Command getCommand(String name) {

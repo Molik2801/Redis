@@ -5,5 +5,5 @@ import java.io.OutputStream;
 import java.util.List;
 
 public interface Command {
-    void execute(List<String> args, OutputStream out, RedisStore store) throws Exception;
+    void execute(List<String> input, OutputStream out, RedisStore store) throws Exception;
 }
