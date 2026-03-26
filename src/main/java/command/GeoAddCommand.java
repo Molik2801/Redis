@@ -12,12 +12,12 @@ public class GeoAddCommand implements Command{
     @Override
     public void execute(List<String> input, OutputStream out, RedisStore store) throws Exception {
        String key = input.get(1);
-       Double longitude = Double.parseDouble(input.get(2));
-       Double latitude = Double.parseDouble(input.get(3));
+       double longitude = Double.parseDouble(input.get(2));
+       double latitude = Double.parseDouble(input.get(3));
        String place = input.get(4);
 
-       Double lonLimit = (double) 180;
-       Double latLimit = 85.05112878;
+       double lonLimit = (double) 180;
+       double latLimit = 85.05112878;
 
        if(longitude > lonLimit || longitude < -lonLimit || latitude > latLimit || latitude < -latLimit){
             out.write(("-ERR invalid longitude,latitude pair" + longitude + "," + latitude + "\r\n").getBytes());
@@ -25,7 +25,7 @@ public class GeoAddCommand implements Command{
             return;
        }
 
-       double score = 0;
+       double score = locationScore(latitude , longitude);
        String sscore = String.valueOf(score);
 
        store.sortedSet.computeIfAbsent(key, k -> new RedisZSet());
@@ -44,6 +44,27 @@ public class GeoAddCommand implements Command{
 
        out.write((":" + memberAdded + "\r\n").getBytes());
        out.flush();
+    }
+
+    public double locationScore(double latitude , double longitude){
+        
+        double latMax = 85.05112878;
+        double lonMax = 180;
+
+        double normalised_latitude = ((1 << 26) * (latitude + latMax)) / (latMax * 2);
+        double normalised_longitude = ((1 << 26) * (longitude + lonMax)) / (lonMax * 2);
+
+        long score = interleave((int) normalised_latitude , (int) normalised_longitude);
+        return (double) score;
+    }
+
+    public long interleave(int x , int y){
+        long z = 0;
+        for(int i = 0 ; i < 32 ; i++){
+            z |= (long) (x & (1 << i)) << i;
+            z |= (long) (y & (1 << i)) << (i+1);
+        }
+        return z;
     }
     
 }
