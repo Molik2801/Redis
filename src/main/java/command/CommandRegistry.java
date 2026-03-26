@@ -41,6 +41,7 @@ public class CommandRegistry {
         commands.put("GEOPOS", new GeoPosCommand());
         commands.put("GEODIST", new GeoDistCommand());
         commands.put("GEOSEARCH", new GeoSearchCommand());
+        commands.put("ACL", new AclCommand());
     }
 
     public Command getCommand(String name) {
