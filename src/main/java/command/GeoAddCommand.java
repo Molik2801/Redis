@@ -1,11 +1,11 @@
 package command;
 
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import store.RedisStore;
 import store.RedisZSet;
+import store.ZSetEntry;
 
 public class GeoAddCommand implements Command{
 
@@ -30,16 +30,19 @@ public class GeoAddCommand implements Command{
 
        store.sortedSet.computeIfAbsent(key, k -> new RedisZSet());
        RedisZSet zSet = store.sortedSet.get(key);
+       ZSetEntry entry = new ZSetEntry(score, place);
 
-       List<String> zCommand = new ArrayList<>();
-       zCommand.add("ZADD");
-       zCommand.add(key);
-       zCommand.add(sscore);
-       zCommand.add(place);
+       int memberAdded = 1;
+       if(zSet.memberScores.containsKey(place)){
+           Double oldScore = zSet.memberScores.get(place);
+           ZSetEntry oldEntry = new ZSetEntry(oldScore, place);
+           zSet.orderedSet.remove(oldEntry);
+           memberAdded = 0;
+       }
+       zSet.memberScores.put(place, score);
+       zSet.orderedSet.add(entry);
 
-    //    execute(zCommand, out, store);
-
-       out.write(":1\r\n".getBytes());
+       out.write((":" + memberAdded + "\r\n").getBytes());
        out.flush();
     }
     
