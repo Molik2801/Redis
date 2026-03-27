@@ -40,6 +40,7 @@ public class RedisStore {
 
     //userAuth
     public ConcurrentHashMap<String , UserData> userAuth = new ConcurrentHashMap<>();
+    public ConcurrentHashMap<OutputStream , Boolean> isAuthenticated = new ConcurrentHashMap<>();
 
     //List for slave replication storing outputstreams of all replicas
     public List<ReplicaConnection> replicaOutputStreams = new CopyOnWriteArrayList<>();

@@ -22,7 +22,7 @@ public class AuthCommand implements Command{
 
        String hashedPass = usr.tohexString(usr.getSHA(password));
        
-       if(usr.passwords.contains(hashedPass)){
+       if(usr.nopass || usr.passwords.contains(hashedPass)){
            out.write("+OK\r\n".getBytes());
            out.flush();
        }

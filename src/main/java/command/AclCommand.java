@@ -2,7 +2,6 @@ package command;
 
 import java.io.OutputStream;
 import java.util.List;
-
 import store.RedisStore;
 import store.UserData;
 
@@ -14,17 +13,16 @@ public class AclCommand implements Command {
         StringBuilder resp = new StringBuilder();
 
         if(command.toUpperCase().equals("WHOAMI")){
-            resp.append("$7\r\ndefault\r\n");
+            if(store.isAuthenticated.get(out) == true) resp.append("$7\r\ndefault\r\n");
+            else resp.append("-NOAUTH Authentication required\r\n");
         }
         if(command.toUpperCase().equals("GETUSER")){
             String user = input.get(2);
-
-            store.userAuth.computeIfAbsent(user, k -> new UserData());
             UserData usr = store.userAuth.get(user);
-
+            
             resp.append("*4\r\n");
             resp.append("$5\r\nflags\r\n");
-            if(usr.nopass){
+            if(usr == null || (usr != null && usr.nopass)){
                 resp.append("*1\r\n");
                 resp.append("$6\r\nnopass\r\n");
                 resp.append("$9\r\npasswords\r\n");

@@ -49,8 +49,11 @@ public class ClientHandler implements Runnable {
             boolean inQueue = false;
             List<List<String>> queuedCommands = new ArrayList<>();
 
-            while (true) {
-                
+            if(store.userAuth.containsKey("default"))store.isAuthenticated.put(realStream, false);
+            else store.isAuthenticated.put(realStream, true);
+
+            while (true) {    
+
                 byte[] input = new byte[1024];
                 int byteCount = inputStream.read(input);
                 if (byteCount == -1) break; // Client disconnected
